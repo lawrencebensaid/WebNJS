@@ -1,0 +1,118 @@
+//
+//  <#file#><#project#>
+//<#meta_created#><#meta_copyright#>
+//
+
+import { AFController } from "avacore";
+<#import#>
+
+
+/**<#class_author#><#class_description#><#class_since#>
+ */
+class <#class_name#> extends AFController {
+
+  /**
+   * @description Shows a specific <#model_lowercase#>.
+   */
+  async show({ body, request }, resolve, reject) {
+    body.validate("ID").alias("ID").number();
+    if (!request.validate({ onFailure: reject })) return;
+    try {
+      const { ID } = body;
+      const results = await <#model#>.select({
+        properties: ["ID", "name", "details", "createdAt", "modifiedAt"],
+        conditions: ID ? [{ key: "ID", value: ID }] : []
+      });
+      resolve({
+        data: ID && results.length === 1 ? results[0] : results
+      });
+    } catch (error) {
+      console.log(error);
+      reject({
+        message: "Unable to show <#model_lowercase#>",
+        errors: [{ error: error.code, message: error.message }]
+      });
+    }
+  }
+
+
+  /**
+   * @description Creates a new <#model_lowercase#>.
+   */
+  async store({ body, request }, resolve, reject) {
+    body.validate("name").alias("Name").string().notEmpty();
+    body.validate("details").alias("Details").string().notEmpty();
+    if (!request.validate({ onFailure: reject })) return;
+    try {
+      const { name, details } = body;
+      const <#model_lowercase#> = new <#model#>();
+      <#model_lowercase#>.name = name;
+      <#model_lowercase#>.details = details;
+      await <#model_lowercase#>.save();
+      resolve({
+        message: "<#model_lowercase#> created.",
+        data: <#model_lowercase#>.data()
+      });
+    } catch (error) {
+      console.log(error);
+      reject({
+        message: "Unable to create <#model_lowercase#>",
+        errors: [{ error: error.code, message: error.message }]
+      });
+    }
+  }
+
+
+  /**
+   * @description Updates all existing <#model_lowercase#>s with a specific ID.
+   */
+  async update({ body, request }, resolve, reject) {
+    body.validate("ID").alias("ID").number().notEmpty();
+    body.validate("name").alias("Name").string().notEmpty();
+    body.validate("details").alias("Details").string().notEmpty();
+    if (!request.validate({ onFailure: reject })) return;
+    try {
+      const { ID, name, details } = body;
+      const <#model_lowercase#> = await <#model#>.get(ID);
+      <#model_lowercase#>.name = name;
+      <#model_lowercase#>.details = details;
+      await <#model_lowercase#>.save();
+      resolve({
+        message: "<#model#> updated."
+      });
+    } catch (error) {
+      console.log(error);
+      reject({
+        message: "Unable to update <#model_lowercase#>",
+        errors: [{ error: error.code, message: error.message }]
+      });
+    }
+  }
+
+
+  /**
+   * @description Deletes all <#model_lowercase#>s with a specific ID.
+   */
+  async destroy({ body, request }, resolve, reject) {
+    body.validate("ID").alias("ID").number().notEmpty();
+    if (!request.validate({ onFailure: reject })) return;
+    try {
+      const { ID } = body;
+      const <#model_lowercase#> = await <#model#>.get(ID);
+      await <#model_lowercase#>.delete();
+      resolve({
+        message: "<#model#> deleted."
+      });
+    } catch (error) {
+      console.log(error);
+      reject({
+        message: "Unable to delete <#model_lowercase#>",
+        errors: [{ error: error.code, message: error.message }]
+      });
+    }
+  }
+
+}
+
+
+export default <#class_name#>;

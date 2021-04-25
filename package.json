@@ -1,0 +1,45 @@
+{
+  "name": "webnjs",
+  "version": "0.7.1-0",
+  "description": "The NodeJS framework for developing sophisticated web-based solutions.",
+  "license": "MIT",
+  "homepage": "https://github.com/lawrencebensaid/WebNJS",
+  "bugs": "https://github.com/lawrencebensaid/WebNJS/issues",
+  "author": {
+    "name": "Lawrence Bensaid",
+    "email": "lawrencebensaid@icloud.com",
+    "url": "https://lawrencebensaid.nl"
+  },
+  "keywords": [
+    "MVC",
+    "OOP",
+    "CLI",
+    "ORM",
+    "ES6",
+    "Framework",
+    "Automated",
+    "Utilities",
+    "Express",
+    "Webserver",
+    "Boilerplates",
+    "Web",
+    "API",
+    "WebNJS"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lawrencebensaid/WebNJS.git"
+  },
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "webnjs": "cli/main.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "commander": "^7.2.0",
+    "dotenv": "^8.2.0",
+    "esm": "^3.2.25",
+    "express": "^4.17.1"
+  }
+}
