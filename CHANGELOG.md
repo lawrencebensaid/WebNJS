@@ -5,6 +5,12 @@ View detailed changes in our [Trello board](https://trello.com/b/EPJJJbYH/avalan
 
 ## [Unreleased]
 
+## [0.7.2] - 2021-04-30
+### Added
+- Added `$ doctor` command
+- Added `$ route-add` command
+- Added `$ controller-add` command
+
 ## [0.7.0] - 2021-04-19
 ### Changes
 - Major overhaul

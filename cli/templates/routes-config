@@ -1,0 +1,11 @@
+{
+  "frontends": [
+    "*"
+  ],
+  "middleware": [],
+  "endpoints": {
+    "<#endpoint#>": [
+      "<#handler#>"
+    ]
+  }
+}
