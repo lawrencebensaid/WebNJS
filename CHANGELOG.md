@@ -5,9 +5,11 @@ View detailed changes in our [Trello board](https://trello.com/b/EPJJJbYH/avalan
 
 ## [Unreleased]
 
-## [0.7.3] - 2021-05-01
+## [0.7.4] - 2021-05-01
 ### Added
+- Added `$ export` command
 - Added `$ doctor` command
+- Standardised notations using regex
 
 ### Fixed
 - Fixed invalid imports.

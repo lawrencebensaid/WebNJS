@@ -1,15 +1,48 @@
-const fs = require("fs");
+import fs from "fs";
 
 var resolve = false;
 var verbose = false;
 var force = false;
 
-/**
- * @description Makes template.
- */
-function doctor() {
+export const enabled = true;
+export const scope = "PROJECT";
+export const description = "reports on the project integrity (and can certain resolve issues)";
+export const parameters = {};
+export const options = {
+  "-v --verbose": {
+    description: "verbose output",
+    execute: () => {
+      verbose = true
+    }
+  },
+  "-r --resolve": {
+    description: "resolve issues if possible",
+    execute: () => {
+      resolve = true
+    }
+  },
+  "-f --force": {
+    description: "forcefully resolve issues",
+    execute: () => {
+      force = true
+    }
+  }
+};
+export default () => {
   var issues = [];
   var resolved = 0;
+  
+
+  // Check entrypoint configuration
+  const scripts = project.getScripts();
+  if (!scripts.hasOwnProperty("start") || scripts.start !== "./main.js") {
+    issues.push({ message: "Entrypoint missing: no start script" });
+    if (resolve) {
+      project.setScript("start", "./main.js");
+      resolved++
+    }
+  }
+
 
   // Check folder structure
   const appDir = `${process.cwd()}/app`;
@@ -130,32 +163,3 @@ function resolveRoutingEndpointPath(key) {
   components[1] = components[1][0] !== "/" ? "/" + components[1] : components[1];
   return components.join(" ");
 }
-
-
-module.exports.execute = doctor;
-module.exports.enabled = true;
-module.exports.requireEnvironment = false;
-module.exports.scope = "PROJECT";
-module.exports.command = "doctor";
-module.exports.options = {
-  "-v --verbose": {
-    description: "verbose output",
-    execute: () => {
-      verbose = true
-    }
-  },
-  "-r --resolve": {
-    description: "resolve issues if possible",
-    execute: () => {
-      resolve = true
-    }
-  },
-  "-f --force": {
-    description: "forcefully resolve issues",
-    execute: () => {
-      force = true
-    }
-  }
-};
-module.exports.description = "Checks the project integrity.";
-module.exports.parameters = {};

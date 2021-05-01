@@ -1,20 +1,23 @@
 import Template from "../Template"
 import fs from "fs"
 
-const {
-  version,
-  author,
-  title: pTitle,
-  name: pName
-} = require(`${process.cwd()}/package.json`);
-const title = pTitle || pName;
-
 var force = false;
 
-/**
- * @description Makes template.
- */
-async function controllerAdd(name) {
+export const enabled = true;
+export const scope = "PROJECT";
+export const description = "creates a new controller";
+export const parameters = {
+  name: "name of the controller or model"
+};
+export const options = {
+  "-f, --force": {
+    description: "force",
+    execute: () => {
+      force = true;
+    }
+  }
+};
+export default async (name) => {
   if (!NOTATIONS.controller.test(name)) {
     print(`\x1b[31mA controller name should end with "Controller". For example: "UserController".\x1b[0m`);
     return;
@@ -32,8 +35,10 @@ async function controllerAdd(name) {
     return;
   }
   name = name[0].toUpperCase() + name.slice(1);
-  const authorName = typeof author.name === "string" ? author.name : author;
-  const authorEmail = typeof author.email === "string" ? author.email : null;
+  const title = project.getTitle();
+  const version = project.getVersion();
+  const authorName = project.getAuthorName();
+  const authorEmail = project.getAuthorEmail();
   const date = new Date().toLocaleDateString();
   const year = new Date().getFullYear();
   const context = {
@@ -53,22 +58,3 @@ async function controllerAdd(name) {
     error(error);
   }
 }
-
-
-module.exports.execute = controllerAdd;
-module.exports.enabled = true;
-module.exports.requireEnvironment = false;
-module.exports.scope = "PROJECT";
-module.exports.command = "controller-add <name>";
-module.exports.options = {
-  "-f, --force": {
-    description: "force",
-    execute: () => {
-      force = true;
-    }
-  }
-};
-module.exports.description = "Creates a new controller.";
-module.exports.parameters = {
-  name: "name of the controller or model"
-};

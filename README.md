@@ -34,7 +34,11 @@ $ avalanche init
 
 **3. Run your local webserver.**
 ```
-$ avalanche run
+$ webnjs run
+```
+or
+```
+$ npm start
 ```
 Done! For more info, browse the [WebNJS wiki on GitHub](https://github.com/Software-Essentials/WebNJS/wiki).
 
