@@ -1,8 +1,8 @@
 import fs from "fs";
 import express from "express";
 import bodyParser from "body-parser";
-import RoutingEndpoint from "core/RoutingEndpoint.js";
-import Validator from "core/Validator";
+import RoutingEndpoint from "./core/RoutingEndpoint";
+import Validator from "./core/Validator";
 import { config } from "dotenv";
 config();
 

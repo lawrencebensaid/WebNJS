@@ -2,10 +2,6 @@ import ControllerDescriptor from "./ControllerDescriptor"
 
 const RoutingEndpoint = (() => {
 
-  var _path;
-  var _method;
-  var _controllers;
-
   /**
    * 
    * @param {string} path
@@ -13,7 +9,12 @@ const RoutingEndpoint = (() => {
    * @param {ControllerDescriptor[]} controllers
    */
   function constructor(path, method = "GET", controllers) {
-    if (typeof path === "string" && path.length > 1 && path[0] === "/") {
+
+    var _path;
+    var _method;
+    var _controllers;
+    
+    if (typeof path === "string" && path.length > 0 && path[0] === "/") {
       _path = path;
     } else {
       console.error(`INVALID PATH '${path}'`);

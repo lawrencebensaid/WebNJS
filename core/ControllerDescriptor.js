@@ -1,14 +1,15 @@
 const ControllerDescriptor = (() => {
 
-  var _className;
-  var _handlerName;
-
   /**
    * 
    * @param {string} className
    * @param {string} handlerName
    */
   function constructor(className, handlerName) {
+
+    var _className;
+    var _handlerName;
+    
     if (typeof className === "string" && className.length > 0 && isNaN(parseInt(className))) {
       _className = className.toUpperCase();
     } else {
