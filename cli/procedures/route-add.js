@@ -8,11 +8,11 @@ var namespace = null;
  * @description Makes template.
  */
 async function routeAdd(method, path, handler) {
-  if (!path.startsWith("/")) {
+  if (!NOTATIONS.endpointPath.test(path)) {
     error(`A route path should start with a '/'. For example: "/posts".`);
     return;
   }
-  if (!handler.includes(".")) {
+  if (!NOTATIONS.controllerHandler.test(handler)) {
     error(`A route handler should look like this: 'PostController.index'.`);
     return;
   }

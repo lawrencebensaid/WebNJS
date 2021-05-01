@@ -1,2 +1,2 @@
-export const Controller = require("./foundation/Controller.js").default;
-export const Model = require("./foundation/Model.js").default;
+export const Controller = require("./core/Controller.js").default;
+export const Model = require("./core/Model.js").default;

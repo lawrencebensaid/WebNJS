@@ -15,18 +15,19 @@ var force = false;
  * @description Makes template.
  */
 async function controllerAdd(name) {
-  if (!name.endsWith("Controller")) {
+  if (!NOTATIONS.controller.test(name)) {
     print(`\x1b[31mA controller name should end with "Controller". For example: "UserController".\x1b[0m`);
     return;
   }
-  if (!fs.existsSync(`${process.cwd()}/app`)) {
-    fs.mkdirSync(`${process.cwd()}/app`);
+  const appDir = `${process.cwd()}/app`;
+  if (!fs.existsSync(appDir)) {
+    fs.mkdirSync(appDir);
   }
-  if (!fs.existsSync(`${process.cwd()}/app/controllers`)) {
-    fs.mkdirSync(`${process.cwd()}/app/controllers`);
+  if (!fs.existsSync(`${appDir}/controllers`)) {
+    fs.mkdirSync(`${appDir}/controllers`);
   }
   const file = `${name}.js`;
-  if (!force && fs.existsSync(`${process.cwd()}/app/controllers/${file}`)) {
+  if (!force && fs.existsSync(`${appDir}/controllers/${file}`)) {
     error("A file with this name already exists. Use '-f' option to overwrite.");
     return;
   }
