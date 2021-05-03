@@ -5,6 +5,7 @@ global.error = (...x) => { console.error(...x.map(y => `\x1b[31m${y}\x1b[0m`)) }
 global.project = null;
 global.TEMPLATES = ["controller", "routes-config"];
 global.NOTATIONS = {
+  model: /[A-Z_]\w*/,
   controller: /[A-Z]\w*Controller/,
   controllerHandler: /[A-Z]\w*Controller\.\w{1,}/,
   handler: /\w{1,}/,

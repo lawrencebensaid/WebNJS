@@ -5,6 +5,17 @@ View detailed changes in our [Trello board](https://trello.com/b/EPJJJbYH/avalan
 
 ## [Unreleased]
 
+## [0.8.0] - 2021-05-03
+### Added
+- Added `$ model-add` command
+- Added 
+
+### Changes
+- Small optimisations
+
+### Fixed
+- Small fixes.
+
 ## [0.7.5] - 2021-05-01
 ### Added
 - Added `$ export` command

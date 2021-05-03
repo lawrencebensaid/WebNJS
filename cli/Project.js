@@ -118,7 +118,7 @@ const Project = (() => {
      */
     function getControllersDir(absolute = false) {
       const dir = "controllers";
-      return absolute ? `${this.getAppDir(absolute)}/${dir}` : dir;
+      return `${this.getAppDir(absolute)}/${dir}`;
     }
     this.getControllersDir = getControllersDir;
 
@@ -127,9 +127,20 @@ const Project = (() => {
      * @param {boolean} absolute returns the absolute path. `false` by default.
      * @returns {string} path to app directory.
      */
+    function getModelsDir(absolute = false) {
+      const dir = "models";
+      return `${this.getAppDir(absolute)}/${dir}`;
+    }
+    this.getModelsDir = getModelsDir;
+
+
+    /**
+     * @param {boolean} absolute returns the absolute path. `false` by default.
+     * @returns {string} path to app directory.
+     */
     function getRoutesDir(absolute = false) {
       const dir = "routes";
-      return absolute ? `${this.getAppDir(absolute)}/${dir}` : dir;
+      return `${this.getAppDir(absolute)}/${dir}`;
     }
     this.getRoutesDir = getRoutesDir;
 
