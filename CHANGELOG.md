@@ -5,6 +5,13 @@ View detailed changes in our [Trello board](https://trello.com/b/EPJJJbYH/avalan
 
 ## [Unreleased]
 
+## [0.8.1] - 2021-05-03
+### Added
+- Added support for sessions
+
+### Fixed
+- Small fixes.
+
 ## [0.8.0] - 2021-05-03
 ### Added
 - Added `$ model-add` command

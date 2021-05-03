@@ -9,7 +9,7 @@ import orm from "webnjs/orm"
 
 /**<#class_author#><#class_description#><#class_since#>
  */
-export default db.define("<#class_name#>", {
+const <#class_name#> = db.define("<#class_name#>", {
   title: String,
   body: String,
   code: Number,
@@ -24,3 +24,6 @@ export default db.define("<#class_name#>", {
     }
   }
 });
+
+
+export default <#class_name#>;

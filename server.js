@@ -1,22 +1,27 @@
 import fs from "fs";
 import orm from "orm";
 import express from "express";
+import session from "express-session";
+import connectMySQL from "connect-mysql";
 import bodyParser from "body-parser";
 import RoutingEndpoint from "./core/RoutingEndpoint";
 import Validator from "./core/Validator";
 import { config } from "dotenv";
 config();
+const MySQLStore = connectMySQL(session);
 
 const {
   HOST,
   PORT,
+  SECRET,
   DB_TYPE,
   DB_HOST,
   DB_NAME,
   DB_USER,
   DB_PASSWORD,
   APP_PATH,
-  HTTP_MAX_BODY_SIZE
+  HTTP_MAX_BODY_SIZE,
+  DB_WEB_SESSION_TABLE
 } = process.env;
 
 const appPath = `${process.cwd()}/${APP_PATH || "app"}`;
@@ -27,6 +32,28 @@ const controllersPath = `${appPath}/controllers`;
 const app = express();
 const limit = HTTP_MAX_BODY_SIZE || "50mb"
 
+const sessionConfiguration = {
+  name: "Auth",
+  secret: SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: false,
+    secure: false,
+    maxAge: 1000 * 60 * 60 * 24 * 3,
+    expires: 1000 * 60 * 60 * 24 * 3
+  }
+};
+
+if (DB_TYPE) {
+  switch (DB_TYPE) {
+    case "mysql":
+      sessionConfiguration.store = new MySQLStore({ config: getConnectionURI(), table: DB_WEB_SESSION_TABLE || "_WebNJS_Sessions" });
+      break;
+  }
+}
+
+app.use(session(sessionConfiguration));
 app.use(bodyParser.urlencoded({ limit, extended: false }));
 app.use(bodyParser.json({ limit }));
 app.disable("x-powered-by");
@@ -73,7 +100,7 @@ function indexRoutes() {
       if (components.length > 1 && typeof components[components.length - 1] === "string") {
         if (components[components.length - 1].toUpperCase() === "JSON") {
           const json = JSON.parse(fs.readFileSync(`${routesPath}/${definitions[i]}`));
-          endpoints = RoutingEndpoint.fromJSON(json);
+          endpoints = endpoints.concat(RoutingEndpoint.fromJSON(json));
         }
       }
     }
@@ -90,24 +117,32 @@ function configureRoutes() {
     for (let i = 0; i < controllers.length; i++) {
       const { 0: controllerName, 1: handlerName } = controllers[i].split(".");
       const location = `${controllersPath}/${controllerName}.js`;
+      if (!fs.existsSync(`${controllersPath}/${controllerName}.js`)) {
+        error(`Skipping: controller '${controllerName}' does not exist!`);
+        continue;
+      }
       const controllerClass = require(location);
       var controller;
       if (controllerClass.hasOwnProperty("default") && typeof controllerClass.default === "function") {
         controller = controllerClass.default;
       } else {
-        console.error("INVALID CONTROLLER");
+        error(`Skipping: controller '${controllerName}' exists but is invalid!`);
         continue;
       }
       const handler = new controller()[handlerName];
       handlers.push(handler);
     }
-    for (let i = 0; i < handlers.length; i++) {
-      const isLast = i === handlers.length - 1;
-      handlers[i] = proxy(handlers[i], isLast)
+    if (handlers.length > 0) {
+      for (let i = 0; i < handlers.length; i++) {
+        const isLast = i === handlers.length - 1;
+        handlers[i] = proxy(handlers[i], isLast)
+      }
+      const endHandler = handlers.pop();
+      const path = endpoints[i].getPath();
+      app[method](path, handlers, endHandler);
+    } else {
+      error(`Skipping: route '${endpoints[i]}' because it has no handlers!`);
     }
-    const endHandler = handlers.pop();
-    const path = endpoints[i].getPath();
-    app[method](path, handlers, endHandler);
   }
 }
 
@@ -118,32 +153,32 @@ function configureWebServer() {
   const host = HOST || "0.0.0.0";
 
   app.listen(port, host, () => {
-    console.log(`\x1b[34mWebserver served on ${port === 443 ? "https://" : "http://"}${host}:${port}\x1b[0m`);
+    print(`\x1b[34mWebserver served on http://${host}:${port}\x1b[0m`);
   });
 
 }
 
 
-async function configureDatabase() {
-
+function getConnectionURI() {
   const dbType = DB_TYPE;
   const dbHost = DB_HOST;
   const dbName = DB_NAME;
   const dbUser = DB_USER;
   const dbPassword = DB_PASSWORD;
-
-  global.db = null;
-
-  if (!dbType || !dbHost || !dbName) return;
-
+  if (!dbType || !dbHost || !dbName) return null;
   switch (dbType) {
-    case "mysql":
-      global.db = await orm.connectAsync(`mysql://${dbUser}:${dbPassword}@${dbHost}/${dbName}`);
-      break;
-    default:
-      break;
+    case "mysql": return `mysql://${dbUser}:${dbPassword}@${dbHost}/${dbName}`;
+    default: return null;
   }
+}
 
+
+async function configureDatabase() {
+  global.db = null;
+  const uri = getConnectionURI();
+  if (uri) {
+    global.db = await orm.connectAsync(uri);
+  }
 }
 
 
