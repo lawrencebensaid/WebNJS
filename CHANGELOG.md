@@ -5,7 +5,7 @@ View detailed changes in our [Trello board](https://trello.com/b/EPJJJbYH/avalan
 
 ## [Unreleased]
 
-## [0.8.1] - 2021-05-03
+## [0.8.5] - 2021-05-03
 ### Added
 - Added support for sessions
 

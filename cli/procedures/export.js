@@ -31,25 +31,38 @@ export default () => {
   // index controllers
   for (const controller of controllers) {
     const controllerFile = fs.readFileSync(`${project.getControllersDir(true)}/${controller}`, { encoding: "utf8" });
-    const rex = /(\/\*\*[\w\s*@.<>{}()]*\*\/)[\w\s]*\b(?!\bcatch\b)(\w{1,})\b\s*\(.*\)\s*\{/gm;
-    const matches = controllerFile.matchAll(rex);
-    for (const { 1: description, 2: handler } of matches) {
-      const rex2 = /@description ([\w *<>{}()]*)/m;
+    const matches = getHandlerComponents(controllerFile);
+    for (const { 1: comments, 2: handler, 3: input } of matches) {
       const { 0: controllerName } = controller.split(".");
       if (typeof descriptions[controllerName] !== "object") {
         descriptions[controllerName] = { handlers: {} };
       }
-      descriptions[controllerName].handlers[handler] = {
-        description: description.match(rex2)[1]
-      };
+      const descriptor = {};
+      if (input) {
+        descriptor.fields = getFields(input);
+      }
+      if (comments) {
+        descriptor.description = getDescription(comments);
+        const examples = getFieldExamples(comments);
+        // print(Object.keys(examples).includes())
+        if (descriptor.fields && descriptor.fields.body) {
+          for (const key in examples) {
+            const example = examples[key];
+            if (descriptor.fields.body.hasOwnProperty(key)) {
+              descriptor.fields.body[key].example = example
+            }
+          }
+        }
+      }
+      descriptions[controllerName].handlers[handler] = descriptor;
     }
   }
-
 
   // index endpoints
   for (const namespace of namespaces) {
     if (!NOTATIONS.namespaceFile.test(namespace)) continue;
     const config = JSON.parse(fs.readFileSync(`${project.getRoutesDir(true)}/${namespace}`));
+    const folderItems = [];
     for (const endpoint in config.endpoints) {
       if (!NOTATIONS.endpoint.test(endpoint)) continue;
       const handlers = config.endpoints[endpoint];
@@ -59,8 +72,21 @@ export default () => {
           const { 0: controller, 1: handler } = last.split(".");
           if (controllers.includes(`${controller}.js`)) {
             const { 0: method, 1: path } = endpoint.split(" ");
-            const { description } = descriptions[controller].handlers[handler];
-            postman.item.push({
+            var description = "";
+            var fields = { body: {}, query: {}, params: {} };
+            if (descriptions.hasOwnProperty(controller) && descriptions[controller].handlers) {
+              const descriptor = descriptions[controller].handlers[handler] || {};
+              description = descriptor.description;
+              fields = descriptor.fields;
+            }
+            var bodyJson = {};
+            if (fields && typeof fields.body === "object") {
+              for (const key in fields.body) {
+                const field = fields.body[key];
+                bodyJson[key] = field.example || null;
+              }
+            }
+            const pmItem = {
               name: `${controller.slice(0, -10)} ${handler}`,
               request: {
                 description,
@@ -68,12 +94,27 @@ export default () => {
                 header: [],
                 url: `{{base}}${path}`
               }
-            });
+            };
+            if (Object.keys(bodyJson).length > 0) {
+              pmItem.request.body = {
+                mode: "raw",
+                raw: JSON.stringify(bodyJson, null, 2),
+                options: { raw: { language: "json" } }
+              }
+            }
+            folderItems.push(pmItem);
           }
         }
       }
     }
+    const folderName = namespace.split(".");
+    folderName.pop();
+    postman.item.push({
+      name: folderName.map(x => { return x.capitalize() }).join(" "),
+      item: folderItems
+    });
   }
+
   const path = `${project.getDir(true)}/${filename}`;
   fs.writeFile(path, JSON.stringify(postman, null, 2), (err) => {
     if (err !== null) {
@@ -82,4 +123,40 @@ export default () => {
     }
     print(`\x1b[32mSaved export at '${path}'.\x1b[0m`);
   });
+}
+
+
+function getHandlerComponents(file) {
+  return file.matchAll(/(\/\*\*[\w\s*@!.,-_<>{}()]*\*\/)[\w\s]*\b(?!\bcatch\b)(\w{1,})\b\s*\(.*\)\s*\{[\s]*(?:((?:body|query|param)Field[\w"'().,;\s-]*)(?:invalid))?/gm);
+}
+
+
+function getDescription(comments) {
+  return comments.match(/@description ([\w *.,-_<>{}()]*)/m)[1];
+}
+
+
+function getFieldExamples(comments) {
+  const matches = comments.matchAll(/@field_example ([\w*.-_]*) +(.*)/gm);
+  const fields = {};
+  for (var { 1: key, 2: value } of matches) {
+    if (value.replace(/[^.]/g, "").length <= 1 && !isNaN(parseFloat(value))) {
+      fields[key] = parseFloat(value);
+    } else if (["true", "false"].includes(value)) {
+      fields[key] = value === "true";
+    } else {
+      fields[key] = value;
+    }
+  }
+  return fields;
+}
+
+
+function getFields(input) {
+  const matches = input.matchAll(/(body|query|param)Field\(["']([\w-]+)["'](?:, ["']([\w-]*)["'])?\)/gm);
+  const fields = { body: {}, query: {}, params: {} };
+  for (const { 1: scope, 2: key, 3: alias } of matches) {
+    fields[scope][key] = { alias, required: false };
+  }
+  return fields;
 }

@@ -198,6 +198,10 @@ function proxy(handler, isLast) {
       params: request.params,
       query: request.query,
       body: request.body,
+      paramsField: request.paramsField,
+      queryField: request.queryField,
+      bodyField: request.bodyField,
+      invalid: request.invalid,
       request, response
     }, resolve, reject);
   }
