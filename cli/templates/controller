@@ -3,7 +3,7 @@
 //<#meta_created#><#meta_copyright#>
 //
 
-import { Controller } from "webnjs";
+import { Controller } from "webnjs"
 
 
 /**<#class_author#><#class_description#><#class_since#>
@@ -33,4 +33,4 @@ class <#class_name#> extends Controller {
 }
 
 
-export default <#class_name#>;
+export default <#class_name#>

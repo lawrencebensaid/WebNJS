@@ -1,3 +1,4 @@
+import { execSync } from "child_process";
 import fs from "fs";
 
 var filename = "PostmanExport.json";
@@ -122,6 +123,7 @@ export default () => {
       return
     }
     print(`\x1b[32mSaved export at '${path}'.\x1b[0m`);
+    execSync(`code -r ${path}`);
   });
 }
 

@@ -67,6 +67,13 @@ export default () => {
       resolved++
     }
   }
+  if (!fs.existsSync(`${appDir}/models`)) {
+    issues.push({ message: "Folder missing: app/models/" });
+    if (resolve) {
+      fs.mkdirSync(`${appDir}/models`);
+      resolved++
+    }
+  }
 
   // Check if all templates are still present
   for (const template of TEMPLATES) {

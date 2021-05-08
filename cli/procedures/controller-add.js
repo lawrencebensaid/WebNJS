@@ -1,4 +1,5 @@
 import Template from "../Template"
+import { execSync } from "child_process"
 import fs from "fs"
 
 var force = false;
@@ -52,7 +53,8 @@ export default async (name) => {
   const template = new Template("controller");
   try {
     await template.render(context, `${project.getControllersDir()}/${file}`, force);
-    print(`\x1b[32mDone.\x1b[0m`);
+    print(`\x1b[32mSaved new controller to '${project.getControllersDir()}/${file}'.\x1b[0m`);
+    execSync(`code -r ${project.getControllersDir()}/${file}`);
   } catch (err) {
     error(err);
   }

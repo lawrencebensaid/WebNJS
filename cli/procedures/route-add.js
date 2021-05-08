@@ -1,5 +1,6 @@
-import fs from "fs"
 import Template from "../Template"
+import { execSync } from "child_process";
+import fs from "fs"
 
 var force = false;
 var namespace = "default";
@@ -57,6 +58,7 @@ export default async (method, path, handler) => {
     fs.writeFile(filepath, JSON.stringify(content, null, 2), (err) => {
       if (err !== null) return error(err);
       print(`\x1b[32mSaved new route to '${namespace}' namespace: '${filepath}'.\x1b[0m`);
+      execSync(`code -r ${filepath}`);
     });
     return;
   }
@@ -68,6 +70,7 @@ export default async (method, path, handler) => {
   try {
     await template.render(context, `app/routes/${file}`, force);
     print(`\x1b[32mSaved new route to '${namespace}' namespace: '${filepath}'.\x1b[0m`);
+    execSync(`code -r ${filepath}`);
   } catch (error) {
     error(`(error) ${error}`);
   }

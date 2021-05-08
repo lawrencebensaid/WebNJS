@@ -1,14 +1,12 @@
-import fs from "fs";
-import orm from "orm";
-import express from "express";
-import session from "express-session";
-import connectMySQL from "connect-mysql";
-import bodyParser from "body-parser";
-import RoutingEndpoint from "./core/RoutingEndpoint";
-import Validator from "./core/Validator";
-import { config } from "dotenv";
+import fs from "fs"
+import orm from "orm"
+import express from "express"
+import session from "express-session"
+import bodyParser from "body-parser"
+import RoutingEndpoint from "./core/RoutingEndpoint"
+import Validator from "./core/Validator"
+import { config } from "dotenv"
 config();
-const MySQLStore = connectMySQL(session);
 
 const {
   HOST,
@@ -48,6 +46,8 @@ const sessionConfiguration = {
 if (DB_TYPE) {
   switch (DB_TYPE) {
     case "mysql":
+      const connectMySQL = require("connect-mysql");
+      const MySQLStore = connectMySQL(session);
       sessionConfiguration.store = new MySQLStore({ config: getConnectionURI(), table: DB_WEB_SESSION_TABLE || "_WebNJS_Sessions" });
       break;
   }
@@ -65,7 +65,9 @@ var endpoints = [];
 
   await configureDatabase();
 
-  await loadModels();
+  if (db) {
+    await loadModels();
+  }
 
   indexRoutes();
 

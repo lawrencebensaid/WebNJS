@@ -3,7 +3,7 @@
 //<#meta_created#><#meta_copyright#>
 //
 
-import { Model } from "webnjs";
+import { Model } from "webnjs"
 import orm from "webnjs/orm"
 
 
@@ -26,4 +26,4 @@ const <#class_name#> = db.define("<#class_name#>", {
 });
 
 
-export default <#class_name#>;
+export default <#class_name#>
