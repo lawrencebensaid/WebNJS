@@ -20,7 +20,7 @@ export const options = {
       force = true;
     }
   },
-  "-n, --namespace": {
+  "-n, --namespace <file>": {
     description: "routing file name. (namespace)",
     execute: (n) => {
       namespace = n;

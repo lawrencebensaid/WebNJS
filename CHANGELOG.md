@@ -5,6 +5,10 @@ View detailed changes in our [Trello board](https://trello.com/b/EPJJJbYH/avalan
 
 ## [Unreleased]
 
+## [0.8.10] - 2021-05-08
+### Changes
+- Mainly fixes and improvements
+
 ## [0.8.5] - 2021-05-03
 ### Added
 - Added support for sessions

@@ -13,17 +13,17 @@ class <#class_name#> extends Controller {
   /**
    * @description Index handler
    */
-  async index({ body, request }, resolve, reject) {
-    body.validate("ID").alias("ID").number();
-    if (!request.validate({ onFailure: reject })) return;
+  async index({ body, bodyField, invalid }, resolve, reject) {
+    bodyField("ID").number();
+    if (invalid({ reject })) return;
     try {
       const { ID } = body;
       resolve({
         id: ID,
         name: "Test"
       });
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      error(err);
       reject({
         message: "Unable to show result"
       });

@@ -39,6 +39,10 @@ export default () => {
         descriptions[controllerName] = { handlers: {} };
       }
       const descriptor = {};
+      const tokenRememberance = getTokenRememberance(comments);
+      if (typeof tokenRememberance === "string") {
+        descriptor.tokenRememberance = tokenRememberance;
+      }
       if (input) {
         descriptor.fields = getFields(input);
       }
@@ -73,12 +77,25 @@ export default () => {
           const { 0: controller, 1: handler } = last.split(".");
           if (controllers.includes(`${controller}.js`)) {
             const { 0: method, 1: path } = endpoint.split(" ");
+            const events = [];
             var description = "";
             var fields = { body: {}, query: {}, params: {} };
             if (descriptions.hasOwnProperty(controller) && descriptions[controller].handlers) {
               const descriptor = descriptions[controller].handlers[handler] || {};
               description = descriptor.description;
               fields = descriptor.fields;
+              if (typeof descriptor.tokenRememberance === "string") {
+                events.push({
+                  listen: "test",
+                  script: {
+                    type: "text/javascript",
+                    exec: [
+                      "const { data: { token } } = pm.response.json();",
+                      "pm.collectionVariables.set(\"token\", token);"
+                    ]
+                  }
+                });
+              }
             }
             var bodyJson = {};
             if (fields && typeof fields.body === "object") {
@@ -89,6 +106,7 @@ export default () => {
             }
             const pmItem = {
               name: `${controller.slice(0, -10)} ${handler}`,
+              event: events,
               request: {
                 description,
                 method,
@@ -135,6 +153,15 @@ function getHandlerComponents(file) {
 
 function getDescription(comments) {
   return comments.match(/@description ([\w *.,-_<>{}()]*)/m)[1];
+}
+
+
+function getTokenRememberance(comments) {
+  const match = comments.match(/@signin(?: ([\w *.,-_<>{}()]*)?)?/m);
+  if (match) {
+    return match[1] || "";
+  }
+  return null;
 }
 
 

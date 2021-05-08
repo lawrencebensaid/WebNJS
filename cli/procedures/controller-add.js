@@ -46,7 +46,7 @@ export default async (name) => {
     meta_created: `\n//  Created ${authorName ? `by ${authorName} ` : ""}on ${date}.`,
     meta_copyright: authorName ? `\n//  Copyright © ${year} ${authorName}. All rights reserved.` : "",
     class_author: authorName ? `\n * @author ${authorName}${authorEmail ? ` <${authorEmail}>\n *` : ""}` : "",
-    class_description: `\n * @description ${name == null ? "Manages requests" : `Manages requests regarding the ${name} model`}.`,
+    class_description: "\n * @description Manages requests",
     class_since: version ? `\n * @since ${version}` : "",
     class_name: name
   };
