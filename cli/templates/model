@@ -9,21 +9,31 @@ import orm from "webnjs/orm"
 
 /**<#class_author#><#class_description#><#class_since#>
  */
-const <#class_name#> = db.define("<#class_name#>", {
-  title: String,
-  body: String,
-  code: Number,
-  deleted: Boolean,
-  type: ["Public", "Private"],
-  thumbnail: Buffer,
-  data: Object
-}, {
-  methods: {
-    fullCode: function () {
-      return this.title + "-" + this.code;
-    }
+class <#class_name#> extends Model {
+
+  constructor() {
+    super("<#class_name#>", {
+      title: String,
+      body: String,
+      code: Number,
+      deleted: Boolean,
+      type: ["Public", "Private"],
+      thumbnail: Buffer,
+      data: Object
+    }, {
+      methods: {
+        fullCode: function () {
+          return this.title + "-" + this.code;
+        }
+      }
+    });
   }
-});
+
+  relations({ <#class_name#> }) {
+
+  }
+
+}
 
 
 export default <#class_name#>

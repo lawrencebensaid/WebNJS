@@ -53,8 +53,8 @@ export default async (name) => {
   const template = new Template("model");
   try {
     await template.render(context, `${project.getModelsDir()}/${file}`, force);
-    print(`\x1b[32mSaved new model to '${project.getControllersDir()}/${file}'.\x1b[0m`);
-    execSync(`code -r ${project.getControllersDir()}/${file}`);
+    print(`\x1b[32mSaved new model to '${project.getModelsDir()}/${file}'.\x1b[0m`);
+    execSync(`code -r ${project.getModelsDir()}/${file}`);
   } catch (error) {
     error(error);
   }

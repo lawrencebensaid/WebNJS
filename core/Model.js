@@ -3,8 +3,8 @@ const Model = (() => {
   /**
    * 
    */
-  function constructor() {
-
+  function constructor(name, structure, options) {
+    db.define(name, structure, options);
   }
 
   return constructor;

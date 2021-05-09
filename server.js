@@ -1,10 +1,12 @@
 import fs from "fs"
+import util from "util"
 import orm from "orm"
 import express from "express"
 import session from "express-session"
 import bodyParser from "body-parser"
 import RoutingEndpoint from "./core/RoutingEndpoint"
 import Validator from "./core/Validator"
+import Model from "./core/Model"
 import { config } from "dotenv"
 config();
 
@@ -80,16 +82,29 @@ var endpoints = [];
 
 async function loadModels() {
   const definitions = fs.readdirSync(modelsPath);
+  const callables = [];
   for (let i = 0; i < definitions.length; i++) {
     if (typeof definitions[i] === "string") {
       const components = definitions[i].split(".");
       if (components.length > 1 && typeof components[components.length - 1] === "string") {
         if (components[components.length - 1].toUpperCase() === "JS") {
-          require(`${modelsPath}/${definitions[i]}`);
+          const { default: model } = require(`${modelsPath}/${definitions[i]}`);
+          const instance = new model();
+          if (instance instanceof Model) {
+            if (typeof instance.relations === "function") {
+              callables.push(instance.relations);
+            }
+          } else {
+            const { relations } = model;
+            if (typeof relations === "function") {
+              callables.push(relations);
+            }
+          }
         }
       }
     }
   }
+  callables.forEach(callable => { callable(db.models) });
   await db.syncPromise();
 }
 
