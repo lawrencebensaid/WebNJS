@@ -19,7 +19,7 @@ global.NOTATIONS = {
 
 const program = require("commander");
 const fs = require("fs");
-const Project = require("./Project").default;
+const Project = require("../core/Project").default;
 
 const ppath = `${process.cwd()}/package.json`;
 if (fs.existsSync(ppath)) {

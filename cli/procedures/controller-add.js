@@ -1,4 +1,4 @@
-import Template from "../Template"
+import Template from "../../core/Template"
 import { execSync } from "child_process"
 import fs from "fs"
 

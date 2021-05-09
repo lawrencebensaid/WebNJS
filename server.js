@@ -186,8 +186,8 @@ async function configureDatabase() {
 
 function proxy(handler, isLast) {
   return (request, response, next) => {
-    const reject = (data) => {
-      response.status(400)
+    const reject = (data, status = 400) => {
+      response.status(status)
       response.send(data);
     };
     const resolve = (data) => {

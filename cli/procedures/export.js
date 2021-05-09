@@ -43,6 +43,10 @@ export default () => {
       if (typeof tokenRememberance === "string") {
         descriptor.tokenRememberance = tokenRememberance;
       }
+      const middleware = getMiddleware(comments);
+      if (middleware === "bearer") {
+        descriptor.auth = {};
+      }
       if (input) {
         descriptor.fields = getFields(input);
       }
@@ -77,20 +81,36 @@ export default () => {
           const { 0: controller, 1: handler } = last.split(".");
           if (controllers.includes(`${controller}.js`)) {
             const { 0: method, 1: path } = endpoint.split(" ");
-            const events = [];
-            var description = "";
+            const pmItem = { request: { method, header: [] }, event: [] };
             var fields = { body: {}, query: {}, params: {} };
+            pmItem.name = `${controller.slice(0, -10)} ${handler}`;
+            const newPath = replaceParams(path);
+            pmItem.request.url = `{{base}}${newPath}`;
+
+            // Build endpoint
             if (descriptions.hasOwnProperty(controller) && descriptions[controller].handlers) {
               const descriptor = descriptions[controller].handlers[handler] || {};
-              description = descriptor.description;
+              pmItem.description = descriptor.description;
               fields = descriptor.fields;
+              if (descriptor.auth) {
+                pmItem.auth = {
+                  type: "bearer",
+                  bearer: [
+                    {
+                      key: "token",
+                      value: "{{token}}",
+                      type: "string"
+                    }
+                  ]
+                };
+              }
               if (typeof descriptor.tokenRememberance === "string") {
-                events.push({
+                pmItem.event.push({
                   listen: "test",
                   script: {
                     type: "text/javascript",
                     exec: [
-                      "const { data: { token } } = pm.response.json();",
+                      `const token = pm.response.json().${descriptor.tokenRememberance};`,
                       "pm.collectionVariables.set(\"token\", token);"
                     ]
                   }
@@ -104,16 +124,6 @@ export default () => {
                 bodyJson[key] = field.example || null;
               }
             }
-            const pmItem = {
-              name: `${controller.slice(0, -10)} ${handler}`,
-              event: events,
-              request: {
-                description,
-                method,
-                header: [],
-                url: `{{base}}${path}`
-              }
-            };
             if (Object.keys(bodyJson).length > 0) {
               pmItem.request.body = {
                 mode: "raw",
@@ -146,6 +156,17 @@ export default () => {
 }
 
 
+function replaceParams(path) {
+  var newPath = path;
+  const matches = path.matchAll(/(:\w+)/g);
+  for (const { 1: param } of matches) {
+    const replacement = `{{${param.substring(1)}}}`;
+    newPath = newPath.split(param).join(replacement);
+  }
+  return newPath;
+}
+
+
 function getHandlerComponents(file) {
   return file.matchAll(/(\/\*\*[\w\s*@!.,-_<>{}()]*\*\/)[\w\s]*\b(?!\bcatch\b)(\w{1,})\b\s*\(.*\)\s*\{[\s]*(?:((?:body|query|param)Field[\w"'().,;\s-]*)(?:invalid))?/gm);
 }
@@ -153,6 +174,15 @@ function getHandlerComponents(file) {
 
 function getDescription(comments) {
   return comments.match(/@description ([\w *.,-_<>{}()]*)/m)[1];
+}
+
+
+function getMiddleware(comments) {
+  const match = comments.match(/@middleware(?: ([\w *.,-_<>{}()]*)?)?/m);
+  if (match) {
+    return match[1] || "";
+  }
+  return null;
 }
 
 
