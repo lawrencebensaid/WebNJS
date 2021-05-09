@@ -199,7 +199,8 @@ function getFieldExamples(comments) {
   const matches = comments.matchAll(/@field_example ([\w*.-_]*) +(.*)/gm);
   const fields = {};
   for (var { 1: key, 2: value } of matches) {
-    if (value.replace(/[^.]/g, "").length <= 1 && !isNaN(parseFloat(value))) {
+    const isNumber = value.replace(/[\d.]+/, "").length === value.length && value.replace(/[^.]/g, "").length <= 1;
+    if (isNumber && !isNaN(parseFloat(value))) {
       fields[key] = parseFloat(value);
     } else if (["true", "false"].includes(value)) {
       fields[key] = value === "true";
