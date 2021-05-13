@@ -31,7 +31,7 @@ export const options = {
 export default () => {
   var issues = [];
   var resolved = 0;
-  
+
 
   // Check entrypoint configuration
   const scripts = project.getScripts();
@@ -45,32 +45,47 @@ export default () => {
 
 
   // Check folder structure
-  const appDir = `${process.cwd()}/app`;
+  const appDir = project.getAppDir(true);
   if (!fs.existsSync(appDir)) {
-    issues.push({ message: "Folder missing: app/" });
+    issues.push({ message: "app folder missing" });
     if (resolve) {
       fs.mkdirSync(appDir);
       resolved++
     }
   }
-  if (!fs.existsSync(`${appDir}/controllers`)) {
-    issues.push({ message: "Folder missing: app/controllers/" });
+
+  const controllersDir = project.getControllersDir(true);
+  if (!fs.existsSync(controllersDir)) {
+    issues.push({ message: "controllers folder missing" });
     if (resolve) {
-      fs.mkdirSync(`${appDir}/controllers`);
+      fs.mkdirSync(controllersDir);
       resolved++
     }
   }
-  if (!fs.existsSync(`${appDir}/routes`)) {
-    issues.push({ message: "Folder missing: app/routes/" });
+
+  const routesDir = project.getRoutesDir(true);
+  if (!fs.existsSync(routesDir)) {
+    issues.push({ message: "routes folder missing" });
     if (resolve) {
-      fs.mkdirSync(`${appDir}/routes`);
+      fs.mkdirSync(routesDir);
       resolved++
     }
   }
-  if (!fs.existsSync(`${appDir}/models`)) {
-    issues.push({ message: "Folder missing: app/models/" });
+
+  const modelsDir = project.getModelsDir(true);
+  if (!fs.existsSync(modelsDir)) {
+    issues.push({ message: "models folder missing" });
     if (resolve) {
-      fs.mkdirSync(`${appDir}/models`);
+      fs.mkdirSync(modelsDir);
+      resolved++
+    }
+  }
+
+  const migrationsDir = project.getMigrationsDir(true);
+  if (!fs.existsSync(migrationsDir)) {
+    issues.push({ message: "migrations folder missing" });
+    if (resolve) {
+      fs.mkdirSync(migrationsDir);
       resolved++
     }
   }
@@ -83,62 +98,64 @@ export default () => {
   }
 
   // Check namespaces for mistakes
-  const namespaces = fs.readdirSync(`${appDir}/routes`);
-  const controllers = fs.readdirSync(`${appDir}/controllers`);
-  for (const namespace of namespaces) {
-    if (!NOTATIONS.namespaceFile.test(namespace)) continue;
+  if (fs.existsSync(routesDir) && fs.existsSync(controllersDir)) {
+    const namespaces = fs.readdirSync(routesDir);
+    const controllers = fs.readdirSync(controllersDir);
+    for (const namespace of namespaces) {
+      if (!NOTATIONS.namespaceFile.test(namespace)) continue;
 
-    // Check namespace content for mistakes
-    const config = JSON.parse(fs.readFileSync(`${appDir}/routes/${namespace}`));
-    for (const key in config.endpoints) {
+      // Check namespace content for mistakes
+      const config = JSON.parse(fs.readFileSync(`${appDir}/routes/${namespace}`));
+      for (const key in config.endpoints) {
 
-      // Check endpoint notation
-      if (!NOTATIONS.endpoint.test(key)) {
-        issues.push({ message: `Invalid endpoint notation: ${key}` });
-        if (resolve) {
-          var newKey = key;
-          newKey = resolveRoutingEndpointPath(key);
-          newKey = resolveRoutingEndpointMethod(newKey);
-          if (NOTATIONS.endpoint.test(newKey)) {
-            const exists = config.endpoints.hasOwnProperty(newKey);
-            if (force || !exists) {
-              config.endpoints[newKey] = config.endpoints[key];
-              delete config.endpoints[key];
-              resolved++;
+        // Check endpoint notation
+        if (!NOTATIONS.endpoint.test(key)) {
+          issues.push({ message: `Invalid endpoint notation: ${key}` });
+          if (resolve) {
+            var newKey = key;
+            newKey = resolveRoutingEndpointPath(key);
+            newKey = resolveRoutingEndpointMethod(newKey);
+            if (NOTATIONS.endpoint.test(newKey)) {
+              const exists = config.endpoints.hasOwnProperty(newKey);
+              if (force || !exists) {
+                config.endpoints[newKey] = config.endpoints[key];
+                delete config.endpoints[key];
+                resolved++;
+              }
             }
           }
         }
-      }
 
-      // Check endpoint controller-handlers
-      const handlers = config.endpoints[key];
-      if (Array.isArray(handlers)) {
-        for (const controllerHandler of handlers) {
-          if (NOTATIONS.controllerHandler.test(controllerHandler)) {
-            const { 0: controller, 1: handler } = controllerHandler.split(".");
-            if (controllers.includes(`${controller}.js`)) {
-              const controllerFile = fs.readFileSync(`${appDir}/controllers/${controller}.js`, { encoding: "utf8" });
-              const rex = /(?=\s*)\b(?!\bcatch\b)(\w{1,})\b(?=\s*\(.*\)\s*\{)/gm;
-              const functions = controllerFile.match(rex);
-              if (!functions.includes(handler)) {
-                issues.push({ message: `Endpoint '${key}' points to handler '${handler}' which does not exist in '${controller}'.` });
+        // Check endpoint controller-handlers
+        const handlers = config.endpoints[key];
+        if (Array.isArray(handlers)) {
+          for (const controllerHandler of handlers) {
+            if (NOTATIONS.controllerHandler.test(controllerHandler)) {
+              const { 0: controller, 1: handler } = controllerHandler.split(".");
+              if (controllers.includes(`${controller}.js`)) {
+                const controllerFile = fs.readFileSync(`${appDir}/controllers/${controller}.js`, { encoding: "utf8" });
+                const rex = /(?=\s*)\b(?!\bcatch\b)(\w{1,})\b(?=\s*\(.*\)\s*\{)/gm;
+                const functions = controllerFile.match(rex);
+                if (!functions.includes(handler)) {
+                  issues.push({ message: `Endpoint '${key}' points to handler '${handler}' which does not exist in '${controller}'.` });
+                }
+              } else {
+                issues.push({ message: `Endpoint '${key}' points to '${controller}' which does not exist.` });
               }
             } else {
-              issues.push({ message: `Endpoint '${key}' points to '${controller}' which does not exist.` });
+              issues.push({ message: `Endpoint '${key}' contains invalid handler ${handler}` });
             }
-          } else {
-            issues.push({ message: `Endpoint '${key}' contains invalid handler ${handler}` });
           }
+        } else {
+          issues.push({ message: `Endpoint '${key}' should be an array` });
         }
-      } else {
-        issues.push({ message: `Endpoint '${key}' should be an array` });
+
+      }
+      if (resolve) {
+        fs.writeFileSync(`${appDir}/routes/${namespace}`, JSON.stringify(config, null, 2));
       }
 
     }
-    if (resolve) {
-      fs.writeFileSync(`${appDir}/routes/${namespace}`, JSON.stringify(config, null, 2));
-    }
-
   }
 
 

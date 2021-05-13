@@ -168,7 +168,7 @@ function replaceParams(path) {
 
 
 function getHandlerComponents(file) {
-  return file.matchAll(/(\/\*\*[\w\s*@!.,-_<>{}()]*\*\/)[\w\s]*\b(?!\bcatch\b)(\w{1,})\b\s*\(.*\)\s*\{[\s]*(?:((?:body|query|param)Field[\w"'().,;\s-]*)(?:invalid))?/gm);
+  return file.matchAll(/(\/\*\*[\w\s*@!'".,-_<>{}()]*\*\/)[\w\s]*\b(?!\bcatch\b)(\w{1,})\b\s*\(.*\)\s*\{[\s]*(?:((?:body|query|param)Field[\w"'().,;\s-]*)(?:invalid))?/gm);
 }
 
 

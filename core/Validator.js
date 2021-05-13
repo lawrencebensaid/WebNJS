@@ -205,7 +205,7 @@
    */
   number() {
     const { value } = this.fields[this.scope][this.key];
-    if (!isNaN(parseInt(value))) {
+    if (value === undefined || !isNaN(parseInt(value))) {
       return this;
     }
     this.reportInvalid("vNumber");
@@ -218,7 +218,7 @@
    */
   string() {
     const { value } = this.fields[this.scope][this.key];
-    if (typeof value === "string") {
+    if (value === undefined || typeof value === "string") {
       return this;
     }
     this.reportInvalid("vString");
@@ -232,6 +232,7 @@
   boolean() {
     const { value } = this.fields[this.scope][this.key];
     if (
+      value === undefined || 
       (typeof value === "string" && value.toLowerCase() === "false") ||
       (typeof value === "string" && value.toLowerCase() === "true") ||
       value === "1" ||

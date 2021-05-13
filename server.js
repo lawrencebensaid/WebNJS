@@ -27,6 +27,7 @@ const {
 const appPath = `${process.cwd()}/${APP_PATH || "app"}`;
 const routesPath = `${appPath}/routes`;
 const modelsPath = `${appPath}/models`;
+const migrationsPath = `${appPath}/migrations`;
 const controllersPath = `${appPath}/controllers`;
 
 const app = express();
@@ -106,6 +107,7 @@ async function loadModels() {
   }
   callables.forEach(callable => { callable(db.models) });
   await db.syncPromise();
+  notifier.emit("loaded_models");
 }
 
 
@@ -223,3 +225,32 @@ function proxy(handler, isLast) {
     }, resolve, reject);
   }
 }
+
+const files = fs.readdirSync(migrationsPath);
+const migrations = {};
+for (const file of files) {
+  if (!file.endsWith(".json")) continue;
+  const content = fs.readFileSync(`${migrationsPath}/${file}`, "utf8");
+  const json = JSON.parse(content);
+  for (const table in json) {
+    if (!migrations.hasOwnProperty(table)) { migrations[table] = [] }
+    for (const population of json[table]) {
+      migrations[table].push(population);
+    }
+  }
+}
+
+notifier.on("loaded_models", async () => {
+  const models = require("./models.js");
+  for (const model in migrations) {
+    const migration = migrations[model];
+    for (const record of migration) {
+      try {
+        await models[model].createAsync(record);
+      } catch (err) {
+        if (err.code === "ER_DUP_ENTRY") continue;
+        error(err);
+      }
+    }
+  }
+});

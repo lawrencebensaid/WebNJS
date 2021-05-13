@@ -5,7 +5,14 @@ View detailed changes in our [Trello board](https://trello.com/b/EPJJJbYH/avalan
 
 ## [Unreleased]
 
-## [0.9.1] - 2021-05-08
+## [0.10.0] - 2021-05-13
+### Added
+- Added migrations
+
+### Changes
+- Fixes and improvements
+
+## [0.9.3] - 2021-05-08
 ### Added
 - Added way to load models right from WebNJS by importing 'webnjs/models'
 - Added global project context variable `project` to runtime
