@@ -44,8 +44,13 @@ export default () => {
         descriptor.tokenRememberance = tokenRememberance;
       }
       const middleware = getMiddleware(comments);
-      if (middleware === "bearer") {
+      if (typeof middleware === "string") {
         descriptor.auth = {};
+        switch (middleware.toLowerCase()) {
+          case "bearer":
+            descriptor.auth.type = "bearer";
+            break;
+        }
       }
       if (input) {
         descriptor.fields = getFields(input);
@@ -74,67 +79,75 @@ export default () => {
     const folderItems = [];
     for (const endpoint in config.endpoints) {
       if (!NOTATIONS.endpoint.test(endpoint)) continue;
-      const handlers = config.endpoints[endpoint];
-      if (Array.isArray(handlers) && handlers.length > 0) {
-        const last = handlers[handlers.length - 1];
-        if (NOTATIONS.controllerHandler.test(last)) {
-          const { 0: controller, 1: handler } = last.split(".");
-          if (controllers.includes(`${controller}.js`)) {
-            const { 0: method, 1: path } = endpoint.split(" ");
-            const pmItem = { request: { method, header: [] }, event: [] };
-            var fields = { body: {}, query: {}, params: {} };
-            pmItem.name = `${controller.slice(0, -10)} ${handler}`;
-            const newPath = replaceParams(path);
-            pmItem.request.url = `{{base}}${newPath}`;
-
-            // Build endpoint
-            if (descriptions.hasOwnProperty(controller) && descriptions[controller].handlers) {
-              const descriptor = descriptions[controller].handlers[handler] || {};
-              pmItem.description = descriptor.description;
-              fields = descriptor.fields;
-              if (descriptor.auth) {
-                pmItem.auth = {
-                  type: "bearer",
-                  bearer: [
-                    {
-                      key: "token",
-                      value: "{{token}}",
-                      type: "string"
-                    }
-                  ]
-                };
-              }
-              if (typeof descriptor.tokenRememberance === "string") {
-                pmItem.event.push({
-                  listen: "test",
-                  script: {
-                    type: "text/javascript",
-                    exec: [
-                      `const token = pm.response.json().${descriptor.tokenRememberance};`,
-                      "pm.collectionVariables.set(\"token\", token);"
-                    ]
+      const handlers = []
+      for (const handler of config.middleware) {
+        handlers.push(handler);
+      }
+      for (const handler of config.endpoints[endpoint]) {
+        handlers.push(handler);
+      }
+      if (!(Array.isArray(handlers) && handlers.length > 0)) continue;
+      const last = handlers.pop();
+      if (!NOTATIONS.controllerHandler.test(last)) continue;
+      const { 0: controller, 1: handler } = last.split(".");
+      if (!controllers.includes(`${controller}.js`)) continue;
+      const { 0: method, 1: path } = endpoint.split(" ");
+      const pmItem = { request: { method, header: [] }, event: [] };
+      var fields = { body: {}, query: {}, params: {} };
+      pmItem.name = `${controller.slice(0, -10)} ${handler}`;
+      const newPath = replaceParams(path);
+      pmItem.request.url = `{{base}}${newPath}`;
+      // Build endpoint
+      if (descriptions.hasOwnProperty(controller) && descriptions[controller].handlers) {
+        const descriptor = descriptions[controller].handlers[handler] || {};
+        pmItem.description = descriptor.description;
+        fields = descriptor.fields;
+        for (const handler of handlers) {
+          const { 0: controller, 1: mHandler } = handler.split(".");
+          if (descriptions.hasOwnProperty(controller) && descriptions[controller].handlers) {
+            const middleware = descriptions[controller].handlers[mHandler];
+            if (middleware.auth) {
+              pmItem.request.auth = {
+                type: middleware.auth.type,
+                bearer: [
+                  {
+                    key: "token",
+                    value: "{{token}}",
+                    type: "string"
                   }
-                });
-              }
+                ]
+              };
             }
-            var bodyJson = {};
-            if (fields && typeof fields.body === "object") {
-              for (const key in fields.body) {
-                const field = fields.body[key];
-                bodyJson[key] = field.example || null;
-              }
-            }
-            if (Object.keys(bodyJson).length > 0) {
-              pmItem.request.body = {
-                mode: "raw",
-                raw: JSON.stringify(bodyJson, null, 2),
-                options: { raw: { language: "json" } }
-              }
-            }
-            folderItems.push(pmItem);
           }
         }
+        if (typeof descriptor.tokenRememberance === "string") {
+          pmItem.event.push({
+            listen: "test",
+            script: {
+              type: "text/javascript",
+              exec: [
+                `const token = pm.response.json().${descriptor.tokenRememberance};`,
+                "pm.collectionVariables.set(\"token\", token);"
+              ]
+            }
+          });
+        }
       }
+      var bodyJson = {};
+      if (fields && typeof fields.body === "object") {
+        for (const key in fields.body) {
+          const field = fields.body[key];
+          bodyJson[key] = field.example || null;
+        }
+      }
+      if (Object.keys(bodyJson).length > 0) {
+        pmItem.request.body = {
+          mode: "raw",
+          raw: JSON.stringify(bodyJson, null, 2),
+          options: { raw: { language: "json" } }
+        }
+      }
+      folderItems.push(pmItem);
     }
     const folderName = namespace.split(".");
     folderName.pop();
