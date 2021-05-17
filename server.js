@@ -1,6 +1,6 @@
 import fs from "fs"
-import util from "util"
 import orm from "orm"
+import cors from "cors"
 import express from "express"
 import session from "express-session"
 import bodyParser from "body-parser"
@@ -12,6 +12,7 @@ config();
 
 const {
   HOST,
+  CORS,
   PORT,
   SECRET,
   DB_TYPE,
@@ -32,6 +33,11 @@ const controllersPath = `${appPath}/controllers`;
 
 const app = express();
 const limit = HTTP_MAX_BODY_SIZE || "50mb"
+
+app.use(cors({
+  origin: CORS || "*",
+  optionsSuccessStatus: 200
+}));
 
 const sessionConfiguration = {
   name: "Auth",
@@ -66,6 +72,10 @@ var endpoints = [];
 
 (async () => {
 
+  // Call preloader
+  const preloader = `${project.getDir(true)}/preloader.js`;
+  if (fs.existsSync(preloader)) require(preloader);
+
   await configureDatabase();
 
   if (db) {
@@ -77,6 +87,10 @@ var endpoints = [];
   configureRoutes();
 
   configureWebServer();
+
+  // Call postloader
+  const postloader = `${project.getDir(true)}/postloader.js`;
+  if (fs.existsSync(postloader)) require(postloader);
 
 })();
 
@@ -107,7 +121,8 @@ async function loadModels() {
   }
   callables.forEach(callable => { callable(db.models) });
   await db.syncPromise();
-  notifier.emit("loaded_models");
+  notifier.emit("webnjs.models.loaded");
+  notifier.emit("loaded_models"); //Deprecated
 }
 
 
@@ -163,6 +178,7 @@ function configureRoutes() {
       error(`Skipping: route '${endpoints[i]}' because it has no handlers!`);
     }
   }
+  notifier.emit("webnjs.router.loaded");
 }
 
 
@@ -173,6 +189,7 @@ function configureWebServer() {
 
   app.listen(port, host, () => {
     print(`\x1b[34mWebserver served on http://${host}:${port}\x1b[0m`);
+    notifier.emit("webnjs.webserver.started");
   });
 
 }
@@ -234,6 +251,10 @@ for (const file of files) {
   const json = JSON.parse(content);
   for (const table in json) {
     if (!migrations.hasOwnProperty(table)) { migrations[table] = [] }
+    if (!Array.isArray(json[table])) {
+      error(`Migration file contains errors:\n${migrationsPath}/${file}`);
+      continue;
+    }
     for (const population of json[table]) {
       migrations[table].push(population);
     }

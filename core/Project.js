@@ -138,6 +138,17 @@ const Project = (() => {
      * @param {boolean} absolute returns the absolute path. `false` by default.
      * @returns {string} path to app directory.
      */
+    function getHelpersDir(absolute = false) {
+      const dir = "helpers";
+      return `${this.getAppDir(absolute)}/${dir}`;
+    }
+    this.getHelpersDir = getHelpersDir;
+
+
+    /**
+     * @param {boolean} absolute returns the absolute path. `false` by default.
+     * @returns {string} path to app directory.
+     */
     function getMigrationsDir(absolute = false) {
       const dir = "migrations";
       return `${this.getAppDir(absolute)}/${dir}`;

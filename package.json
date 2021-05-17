@@ -1,6 +1,6 @@
 {
   "name": "webnjs",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "The NodeJS framework for developing sophisticated web-based solutions.",
   "license": "MIT",
   "homepage": "https://github.com/lawrencebensaid/WebNJS",
@@ -42,6 +42,7 @@
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "express-session": "^1.17.1",
+    "cors": "^2.8.5",
     "orm": "^5.0.6"
   }
 }
