@@ -143,27 +143,41 @@ function indexRoutes() {
 
 
 function configureRoutes() {
+  const controllers = {};
   for (let i = 0; i < endpoints.length; i++) {
-    const method = endpoints[i].getMethod().toLowerCase();
-    const controllers = endpoints[i].getControllers();
-    if (!Array.isArray(controllers) && controllers.length > 0) continue;
-    const handlers = [];
-    for (let i = 0; i < controllers.length; i++) {
-      const { 0: controllerName, 1: handlerName } = controllers[i].split(".");
+    const endpointControllers = endpoints[i].getControllers();
+    if (!Array.isArray(endpointControllers) && endpointControllers.length > 0) continue;
+    for (let i = 0; i < endpointControllers.length; i++) {
+      const { 0: controllerName } = endpointControllers[i].split(".");
       const location = `${controllersPath}/${controllerName}.js`;
       if (!fs.existsSync(`${controllersPath}/${controllerName}.js`)) {
         error(`Skipping: controller '${controllerName}' does not exist!`);
         continue;
       }
+      if (controllers.hasOwnProperty(controllerName)) continue; // Skip if controller has already been loaded.
       const controllerClass = require(location);
-      var controller;
-      if (controllerClass.hasOwnProperty("default") && typeof controllerClass.default === "function") {
-        controller = controllerClass.default;
-      } else {
+      if (
+        !controllerClass.hasOwnProperty("default") || // Skip if module doesn't provide a default export.
+        typeof controllerClass.default !== "function" // Skip if default export isn't a contructor (function/callable).
+      ) {
         error(`Skipping: controller '${controllerName}' exists but is invalid!`);
         continue;
       }
-      const handler = new controller()[handlerName];
+      controllers[controllerName] = new controllerClass.default();
+    }
+  }
+  for (let i = 0; i < endpoints.length; i++) {
+    const method = endpoints[i].getMethod().toLowerCase();
+    const endpointControllers = endpoints[i].getControllers();
+    if (!Array.isArray(endpointControllers) && endpointControllers.length > 0) continue;
+    const handlers = [];
+    for (let i = 0; i < endpointControllers.length; i++) {
+      const { 0: controllerName, 1: handlerName } = endpointControllers[i].split(".");
+      if (!controllers.hasOwnProperty(controllerName)) {
+        error(`Trying to call controller '${controllerName}' which hasn't been loaded!`);
+        continue;
+      }
+      const handler = controllers[controllerName][handlerName];
       handlers.push(handler);
     }
     if (handlers.length > 0) {
