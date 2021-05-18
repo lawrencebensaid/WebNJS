@@ -8,6 +8,7 @@ import RoutingEndpoint from "./core/RoutingEndpoint"
 import Validator from "./core/Validator"
 import Model from "./core/Model"
 import { config } from "dotenv"
+import { ObjectID } from "webnjs"
 config();
 
 const {
@@ -22,7 +23,8 @@ const {
   DB_PASSWORD,
   APP_PATH,
   HTTP_MAX_BODY_SIZE,
-  DB_WEB_SESSION_TABLE
+  DB_WEB_SESSION_TABLE,
+  MIGRATE_ON_START
 } = process.env;
 
 const appPath = `${process.cwd()}/${APP_PATH || "app"}`;
@@ -276,12 +278,15 @@ for (const file of files) {
 }
 
 notifier.on("loaded_models", async () => {
+  if (!MIGRATE_ON_START) return;
   const models = require("./models.js");
   for (const model in migrations) {
     const migration = migrations[model];
     for (const record of migration) {
       try {
-        await models[model].createAsync(record);
+        const modelClass = models[model];
+        if (!modelClass) continue;
+        await modelClass.createAsync(record);
       } catch (err) {
         if (err.code === "ER_DUP_ENTRY") continue;
         error(err);
